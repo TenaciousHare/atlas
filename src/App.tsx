@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { supabase } from "./lib/supabase";
 import Login from "./components/Login";
+import DailyForm from "./components/DailyForm";
 
 function App() {
   const [session, setSession] = useState<Session | null>(null);
@@ -40,18 +41,20 @@ function App() {
   if (!session) return <Login />;
 
   return (
-    <section className="min-h-screen flex flex-col items-center justify-center text-center px-4">
-      <h1 className="text-4xl font-bold tracking-tight">A.T.L.A.S. 4.0</h1>
-      <p className="mt-2 text-slate-500">
-        Zalogowano jako {session.user.email}
-      </p>
-      <button
-        onClick={handleLogout}
-        className="mt-6 rounded border px-4 py-2 text-sm"
-      >
-        Wyloguj
-      </button>
-    </section>
+    <div className="min-h-screen">
+      <header className="flex items-center justify-between border-b px-4 py-3">
+        <span className="text-sm text-slate-500">{session.user.email}</span>
+        <button
+          onClick={handleLogout}
+          className="rounded border px-3 py-1 text-sm"
+        >
+          Wyloguj
+        </button>
+      </header>
+      <main>
+        <DailyForm session={session} />
+      </main>
+    </div>
   );
 }
 
