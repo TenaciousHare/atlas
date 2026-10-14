@@ -1,1 +1,13 @@
 @import "tailwindcss";
+
+@theme {
+  --color-brand-bg: #0f1117; /* granatowa czerń zamiast neutralnej */
+  --color-brand-surface: #181b24; /* karty/inputy — stopień wyżej niż tło */
+  --color-brand-border: #2a2a33; /* obramowania */
+  --color-brand-gold: #f5b945; /* akcent — wschód słońca */
+  --color-brand-navy: #1b2440; /* głęboki granat nieba */
+}
+
+body {
+  @apply bg-brand-bg text-zinc-200;
+}
