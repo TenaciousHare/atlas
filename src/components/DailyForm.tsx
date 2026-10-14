@@ -52,49 +52,51 @@ export default function DailyForm({ session }: { session: Session }) {
   return (
     <section className=" flex items-center justify-center px-4 py-10">
       <form onSubmit={handleSave} className="w-full max-w-sm space-y-4">
-        <h2 className="text-xl font-semibold text-center">Dziś · {today}</h2>
+        <h2 className="text-xl font-semibold text-center text-zinc-100">
+          Dziś · {today}
+        </h2>
 
         <input
           type="text"
           value={weight}
           onChange={(e) => setWeight(e.target.value)}
           placeholder="waga"
-          className="w-full rounded border px-3 py-2"
+          className="w-full rounded border px-3 py-2 bg-brand-surface border-brand-border text-zinc-100 placeholder:text-zinc-500"
         />
         <input
           type="text"
           value={waist}
           onChange={(e) => setWaist(e.target.value)}
           placeholder="pas"
-          className="w-full rounded border px-3 py-2"
+          className="w-full rounded border px-3 py-2 bg-brand-surface border-brand-border text-zinc-100 placeholder:text-zinc-500"
         />
         <input
           type="text"
           value={steps}
           onChange={(e) => setSteps(e.target.value)}
           placeholder="kroki"
-          className="w-full rounded border px-3 py-2"
+          className="w-full rounded border px-3 py-2 bg-brand-surface border-brand-border text-zinc-100 placeholder:text-zinc-500"
         />
         <input
           type="text"
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
           placeholder="uwagi"
-          className="w-full rounded border px-3 py-2"
+          className="w-full rounded border px-3 py-2 bg-brand-surface border-brand-border text-zinc-100 placeholder:text-zinc-500"
         />
 
         <button
           type="submit"
           disabled={status === "saving"}
-          className="w-full rounded bg-slate-900 py-2 text-white disabled:opacity-50"
+          className="w-full rounded bg-brand-gold text-brand-bg py-2 font-medium disabled:opacity-50"
         >
           {status === "saving" ? "Zapisywanie…" : "Zapisz"}
         </button>
         {status === "saved" && (
-          <p className="text-sm text-green-600 text-center">Zapisano ✓</p>
+          <p className="text-sm text-green-400 text-center">Zapisano ✓</p>
         )}
         {status === "error" && (
-          <p className="text-sm text-red-600 text-center">
+          <p className="text-sm text-red-400 text-center">
             Nie udało się zapisać
           </p>
         )}
