@@ -30,25 +30,41 @@ export default function Login() {
         <h1 className="text-2xl font-bold text-center text-zinc-100">
           A.T.L.A.S. 4.0
         </h1>
+        <div className="space-y-1">
+          <label htmlFor="email" className="block text-sm text-zinc-400">
+            E-mail
+          </label>
+          <input
+            id="email"
+            type="email"
+            value={email}
+            autoComplete="email"
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="jan@example.com"
+            required
+            className="w-full rounded border px-3 py-2 bg-brand-surface border-brand-border text-zinc-100 placeholder:text-zinc-500"
+          />
+        </div>
+        <div className="space-y-1">
+          <label htmlFor="password" className="block text-sm text-zinc-400">
+            Hasło
+          </label>
+          <input
+            id="password"
+            type="password"
+            autoComplete="current-password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            className="w-full rounded border px-3 py-2 bg-brand-surface border-brand-border text-zinc-100 placeholder:text-zinc-500"
+          />
+        </div>
 
-        <input
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="email"
-          required
-          className="w-full rounded border px-3 py-2 bg-brand-surface border-brand-border text-zinc-100 placeholder:text-zinc-500"
-        />
-        <input
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder="hasło"
-          required
-          className="w-full rounded border px-3 py-2 bg-brand-surface border-brand-border text-zinc-100 placeholder:text-zinc-500"
-        />
-
-        {errorMsg && <p className="text-sm text-red-400">{errorMsg}</p>}
+        {errorMsg && (
+          <p role="alert" className="text-sm text-red-400">
+            {errorMsg}
+          </p>
+        )}
 
         <button
           type="submit"
