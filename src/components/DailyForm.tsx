@@ -50,41 +50,66 @@ export default function DailyForm({ session }: { session: Session }) {
   }
 
   return (
-    <section className=" flex items-center justify-center px-4 py-10">
+    <section className="flex items-center justify-center px-4 py-10">
       <form onSubmit={handleSave} className="w-full max-w-sm space-y-4">
         <h2 className="text-xl font-semibold text-center text-zinc-100">
           Dziś · {today}
         </h2>
-
-        <input
-          type="text"
-          value={weight}
-          onChange={(e) => setWeight(e.target.value)}
-          placeholder="waga"
-          className="w-full rounded border px-3 py-2 bg-brand-surface border-brand-border text-zinc-100 placeholder:text-zinc-500"
-        />
-        <input
-          type="text"
-          value={waist}
-          onChange={(e) => setWaist(e.target.value)}
-          placeholder="pas"
-          className="w-full rounded border px-3 py-2 bg-brand-surface border-brand-border text-zinc-100 placeholder:text-zinc-500"
-        />
-        <input
-          type="text"
-          value={steps}
-          onChange={(e) => setSteps(e.target.value)}
-          placeholder="kroki"
-          className="w-full rounded border px-3 py-2 bg-brand-surface border-brand-border text-zinc-100 placeholder:text-zinc-500"
-        />
-        <input
-          type="text"
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-          placeholder="uwagi"
-          className="w-full rounded border px-3 py-2 bg-brand-surface border-brand-border text-zinc-100 placeholder:text-zinc-500"
-        />
-
+        <div className="space-y-1">
+          <label htmlFor="weight" className="block text-sm text-zinc-400">
+            Waga (kg)
+          </label>
+          <input
+            id="weight"
+            type="text"
+            value={weight}
+            onChange={(e) => setWeight(e.target.value)}
+            placeholder="np. 95,5"
+            inputMode="decimal"
+            className="w-full rounded border px-3 py-2 bg-brand-surface border-brand-border text-zinc-100 placeholder:text-zinc-500"
+          />
+        </div>
+        <div className="space-y-1">
+          <label htmlFor="waist" className="block text-sm text-zinc-400">
+            Pas (cm)
+          </label>
+          <input
+            id="waist"
+            type="text"
+            value={waist}
+            onChange={(e) => setWaist(e.target.value)}
+            placeholder="np. 83,5"
+            inputMode="decimal"
+            className="w-full rounded border px-3 py-2 bg-brand-surface border-brand-border text-zinc-100 placeholder:text-zinc-500"
+          />
+        </div>
+        <div className="space-y-1">
+          <label htmlFor="steps" className="block text-sm text-zinc-400">
+            Kroki
+          </label>
+          <input
+            id="steps"
+            type="text"
+            value={steps}
+            onChange={(e) => setSteps(e.target.value)}
+            placeholder="np. 10231"
+            inputMode="numeric"
+            className="w-full rounded border px-3 py-2 bg-brand-surface border-brand-border text-zinc-100 placeholder:text-zinc-500"
+          />
+        </div>
+        <div className="space-y-1">
+          <label htmlFor="notes" className="block text-sm text-zinc-400">
+            Uwagi
+          </label>
+          <input
+            id="notes"
+            type="text"
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            placeholder="np. Słabe samopoczucie"
+            className="w-full rounded border px-3 py-2 bg-brand-surface border-brand-border text-zinc-100 placeholder:text-zinc-500"
+          />
+        </div>
         <button
           type="submit"
           disabled={status === "saving"}
@@ -93,10 +118,12 @@ export default function DailyForm({ session }: { session: Session }) {
           {status === "saving" ? "Zapisywanie…" : "Zapisz"}
         </button>
         {status === "saved" && (
-          <p className="text-sm text-green-400 text-center">Zapisano ✓</p>
+          <p role="status" className="text-sm text-green-400 text-center">
+            Zapisano ✓
+          </p>
         )}
         {status === "error" && (
-          <p className="text-sm text-red-400 text-center">
+          <p role="alert" className="text-sm text-red-400 text-center">
             Nie udało się zapisać
           </p>
         )}
