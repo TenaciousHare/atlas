@@ -25,6 +25,9 @@ export default function Layout({
             <NavLink to="/" end className={linkClass}>
               Dodaj wpis
             </NavLink>
+            <NavLink to="/cwiczenia" className={linkClass}>
+              Ćwiczenia
+            </NavLink>
             <NavLink to="/dashboard" className={linkClass}>
               Dashboard
             </NavLink>

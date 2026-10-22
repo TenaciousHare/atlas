@@ -6,6 +6,7 @@ import Login from "./components/Login";
 import Layout from "./components/Layout";
 import DailyForm from "./components/DailyForm";
 import Dashboard from "./components/Dashboard";
+import Exercises from "./components/Exercises";
 
 function App() {
   const [session, setSession] = useState<Session | null>(null);
@@ -46,6 +47,7 @@ function App() {
         >
           <Route index element={<DailyForm session={session} />} />
           <Route path="dashboard" element={<Dashboard />} />
+          <Route path="cwiczenia" element={<Exercises />} />
         </Route>
       </Routes>
     </BrowserRouter>
