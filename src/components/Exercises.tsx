@@ -129,25 +129,32 @@ export default function Exercises() {
       <h2 className="mb-3 text-xl font-semibold text-zinc-100 ">
         Baza ćwiczeń
       </h2>
-      
-      {isLoading ? <p className="text-sm text-zinc-500">Ładowanie ...</p> : exercises.length === 0 ? (
-        <p className="text-sm text-zinc-500">
-          Brak ćwiczeń — dodaj pierwsze powyżej.
-        </p>
-      ) :
-      (<ul className="divide-y divide-brand-border">
-        {exercises.map((exercise) => (
-          <li
-            key={exercise.id}
-            className="flex justify-between py-2 text-zinc-100"
-          >
-            {exercise.name}
-            <span className="text-sm text-zinc-500">
-              {exercise.measure === "reps" ? "powtórzenia" : "czas"}
-            </span>
-          </li>
-        ))}
-      </ul>)}
+      <div role="status">
+        {isLoading ? (
+          <p className="text-sm text-zinc-500">Ładowanie ...</p>
+        ) : (
+          exercises.length === 0 && (
+            <p className="text-sm text-zinc-500">
+              Brak ćwiczeń — dodaj pierwsze powyżej.
+            </p>
+          )
+        )}
+      </div>
+      {exercises.length > 0 && (
+        <ul className="divide-y divide-brand-border">
+          {exercises.map((exercise) => (
+            <li
+              key={exercise.id}
+              className="flex justify-between py-2 text-zinc-100"
+            >
+              {exercise.name}
+              <span className="text-sm text-zinc-500">
+                {exercise.measure === "reps" ? "powtórzenia" : "czas"}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
     </section>
   );
 }
