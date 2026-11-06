@@ -15,6 +15,7 @@ export default function Exercises() {
   const [measure, setMeasure] = useState<Exercise["measure"]>("reps");
   const [usesWeight, setUsesWeight] = useState(false);
   const [unilateral, setUnilateral] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     supabase
@@ -22,6 +23,7 @@ export default function Exercises() {
       .select("id, name, measure, uses_weight, unilateral")
       .order("name")
       .then(({ data }) => {
+        setIsLoading(false);
         if (!data) return;
         setExercises(data);
       });
@@ -127,12 +129,13 @@ export default function Exercises() {
       <h2 className="mb-3 text-xl font-semibold text-zinc-100 ">
         Baza ćwiczeń
       </h2>
-      {exercises.length === 0 && (
+      
+      {isLoading ? <p className="text-sm text-zinc-500">Ładowanie ...</p> : exercises.length === 0 ? (
         <p className="text-sm text-zinc-500">
           Brak ćwiczeń — dodaj pierwsze powyżej.
         </p>
-      )}
-      <ul className="divide-y divide-brand-border">
+      ) :
+      (<ul className="divide-y divide-brand-border">
         {exercises.map((exercise) => (
           <li
             key={exercise.id}
@@ -144,7 +147,7 @@ export default function Exercises() {
             </span>
           </li>
         ))}
-      </ul>
+      </ul>)}
     </section>
   );
 }
