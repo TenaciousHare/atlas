@@ -1,40 +1,15 @@
-import { useEffect, useState, type SyntheticEvent } from "react";
+import { useState, type SyntheticEvent } from "react";
+import useExercises, { type Exercise } from "../hooks/useExercises";
 import { supabase } from "../lib/supabase";
 
-type Exercise = {
-  id: string;
-  name: string;
-  measure: "reps" | "time";
-  uses_weight: boolean;
-  unilateral: boolean;
-};
-
 export default function Exercises() {
-  const [exercises, setExercises] = useState<Exercise[]>([]);
   const [name, setName] = useState("");
   const [measure, setMeasure] = useState<Exercise["measure"]>("reps");
   const [usesWeight, setUsesWeight] = useState(false);
   const [unilateral, setUnilateral] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<null | string>(null);
   const [nameError, setNameError] = useState(false);
-  const [fetchError, setFetchError] = useState(false);
-
-  useEffect(() => {
-    supabase
-      .from("exercises")
-      .select("id, name, measure, uses_weight, unilateral")
-      .order("name")
-      .then(({ data, error }) => {
-        setIsLoading(false);
-        if (error) {
-          setFetchError(true);
-          console.error(error);
-        }
-        if (!data) return;
-        setExercises(data);
-      });
-  }, []);
+  const { exercises, setExercises, isLoading, fetchError } = useExercises();
 
   async function handleAdd(e: SyntheticEvent) {
     e.preventDefault();
