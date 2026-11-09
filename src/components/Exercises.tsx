@@ -1,6 +1,5 @@
 import { useState, type SyntheticEvent } from "react";
 import useExercises, { type Exercise } from "../hooks/useExercises";
-import { supabase } from "../lib/supabase";
 
 export default function Exercises() {
   const [name, setName] = useState("");
@@ -9,22 +8,18 @@ export default function Exercises() {
   const [unilateral, setUnilateral] = useState(false);
   const [errorMessage, setErrorMessage] = useState<null | string>(null);
   const [nameError, setNameError] = useState(false);
-  const { exercises, setExercises, isLoading, fetchError } = useExercises();
+  const { exercises, addExercise, isLoading, fetchError } = useExercises();
 
   async function handleAdd(e: SyntheticEvent) {
     e.preventDefault();
     setErrorMessage(null);
     setNameError(false);
-    const { data, error } = await supabase
-      .from("exercises")
-      .insert({
-        name: name.trim(),
-        measure,
-        uses_weight: usesWeight,
-        unilateral,
-      })
-      .select("id, name, measure, uses_weight, unilateral")
-      .single();
+    const error = await addExercise({
+      name: name.trim(),
+      measure,
+      uses_weight: usesWeight,
+      unilateral,
+    });
 
     if (error?.code === "23505") {
       setErrorMessage("Ćwiczenie o tej nazwie już istnieje");
@@ -34,9 +29,7 @@ export default function Exercises() {
       setErrorMessage("Wystąpił błąd, spróbuj ponownie");
       return;
     }
-    setExercises(
-      [...exercises, data].sort((a, b) => a.name.localeCompare(b.name, "pl")),
-    );
+
     setName("");
     setMeasure("reps");
     setUsesWeight(false);

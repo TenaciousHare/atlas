@@ -30,5 +30,18 @@ export default function useExercises() {
       });
   }, []);
 
-  return { exercises, setExercises, isLoading, fetchError };
+  async function addExercise(newExercise: Omit<Exercise, "id">) {
+    const { data, error } = await supabase
+      .from("exercises")
+      .insert(newExercise)
+      .select("id, name, measure, uses_weight, unilateral")
+      .single();
+    if (error) return error;
+    setExercises((prev) =>
+      [...prev, data].sort((a, b) => a.name.localeCompare(b.name, "pl")),
+    );
+    return null;
+  }
+
+  return { exercises, addExercise, isLoading, fetchError };
 }
