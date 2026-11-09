@@ -15,13 +15,22 @@ export default function Exercises() {
   const [measure, setMeasure] = useState<Exercise["measure"]>("reps");
   const [usesWeight, setUsesWeight] = useState(false);
   const [unilateral, setUnilateral] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState<null | string>(null);
+  const [nameError, setNameError] = useState(false);
+  const [fetchError, setFetchError] = useState(false);
 
   useEffect(() => {
     supabase
       .from("exercises")
       .select("id, name, measure, uses_weight, unilateral")
       .order("name")
-      .then(({ data }) => {
+      .then(({ data, error }) => {
+        setIsLoading(false);
+        if (error) {
+          setFetchError(true);
+          console.error(error);
+        }
         if (!data) return;
         setExercises(data);
       });
@@ -29,15 +38,25 @@ export default function Exercises() {
 
   async function handleAdd(e: SyntheticEvent) {
     e.preventDefault();
-
+    setErrorMessage(null);
+    setNameError(false);
     const { data, error } = await supabase
       .from("exercises")
-      .insert({ name, measure, uses_weight: usesWeight, unilateral })
+      .insert({
+        name: name.trim(),
+        measure,
+        uses_weight: usesWeight,
+        unilateral,
+      })
       .select("id, name, measure, uses_weight, unilateral")
       .single();
 
-    if (error) {
-      console.error(error);
+    if (error?.code === "23505") {
+      setErrorMessage("Ćwiczenie o tej nazwie już istnieje");
+      setNameError(true);
+      return;
+    } else if (error) {
+      setErrorMessage("Wystąpił błąd, spróbuj ponownie");
       return;
     }
     setExercises(
@@ -47,6 +66,16 @@ export default function Exercises() {
     setMeasure("reps");
     setUsesWeight(false);
     setUnilateral(false);
+  }
+
+  let statusMessage = "";
+
+  if (isLoading) {
+    statusMessage = "Ładowanie ...";
+  } else if (fetchError) {
+    statusMessage = "Nie udało się pobrać ćwiczeń. Odśwież stronę.";
+  } else if (exercises.length === 0) {
+    statusMessage = "Brak ćwiczeń — dodaj pierwsze powyżej.";
   }
 
   return (
@@ -63,10 +92,16 @@ export default function Exercises() {
             id="name"
             type="text"
             value={name}
-            onChange={(e) => setName(e.target.value)}
+            onChange={(e) => {
+              setName(e.target.value);
+              setErrorMessage(null);
+              setNameError(false);
+            }}
+            aria-invalid={nameError}
+            aria-describedby="name-error"
             required
             placeholder="pompki"
-            className="w-full rounded border px-3 py-2 bg-brand-surface border-brand-border text-zinc-100 placeholder:text-zinc-500"
+            className="w-full rounded border px-3 py-2 bg-brand-surface border-brand-border text-zinc-100 placeholder:text-zinc-500 aria-invalid:border-red-400"
           />
         </div>
         <div className="space-y-1">
@@ -123,28 +158,32 @@ export default function Exercises() {
         >
           Dodaj
         </button>
+        <div id="name-error" className="text-sm text-red-400" role="alert">
+          {errorMessage}
+        </div>
       </form>
+
       <h2 className="mb-3 text-xl font-semibold text-zinc-100 ">
         Baza ćwiczeń
       </h2>
-      {exercises.length === 0 && (
-        <p className="text-sm text-zinc-500">
-          Brak ćwiczeń — dodaj pierwsze powyżej.
-        </p>
+      <div role="status">
+        <p className="text-sm text-zinc-500">{statusMessage}</p>
+      </div>
+      {exercises.length > 0 && (
+        <ul className="divide-y divide-brand-border">
+          {exercises.map((exercise) => (
+            <li
+              key={exercise.id}
+              className="flex justify-between py-2 text-zinc-100"
+            >
+              {exercise.name}
+              <span className="text-sm text-zinc-500">
+                {exercise.measure === "reps" ? "powtórzenia" : "czas"}
+              </span>
+            </li>
+          ))}
+        </ul>
       )}
-      <ul className="divide-y divide-brand-border">
-        {exercises.map((exercise) => (
-          <li
-            key={exercise.id}
-            className="flex justify-between py-2 text-zinc-100"
-          >
-            {exercise.name}
-            <span className="text-sm text-zinc-500">
-              {exercise.measure === "reps" ? "powtórzenia" : "czas"}
-            </span>
-          </li>
-        ))}
-      </ul>
     </section>
   );
 }
