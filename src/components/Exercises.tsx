@@ -18,14 +18,19 @@ export default function Exercises() {
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<null | string>(null);
   const [nameError, setNameError] = useState(false);
+  const [fetchError, setFetchError] = useState(false);
 
   useEffect(() => {
     supabase
       .from("exercises")
       .select("id, name, measure, uses_weight, unilateral")
       .order("name")
-      .then(({ data }) => {
+      .then(({ data, error }) => {
         setIsLoading(false);
+        if (error) {
+          setFetchError(true);
+          console.error(error);
+        }
         if (!data) return;
         setExercises(data);
       });
@@ -61,6 +66,16 @@ export default function Exercises() {
     setMeasure("reps");
     setUsesWeight(false);
     setUnilateral(false);
+  }
+
+  let statusMessage = "";
+
+  if (isLoading) {
+    statusMessage = "Ładowanie ...";
+  } else if (fetchError) {
+    statusMessage = "Nie udało się pobrać ćwiczeń. Odśwież stronę.";
+  } else if (exercises.length === 0) {
+    statusMessage = "Brak ćwiczeń — dodaj pierwsze powyżej.";
   }
 
   return (
@@ -152,15 +167,7 @@ export default function Exercises() {
         Baza ćwiczeń
       </h2>
       <div role="status">
-        {isLoading ? (
-          <p className="text-sm text-zinc-500">Ładowanie ...</p>
-        ) : (
-          exercises.length === 0 && (
-            <p className="text-sm text-zinc-500">
-              Brak ćwiczeń — dodaj pierwsze powyżej.
-            </p>
-          )
-        )}
+        <p className="text-sm text-zinc-500">{statusMessage}</p>
       </div>
       {exercises.length > 0 && (
         <ul className="divide-y divide-brand-border">
