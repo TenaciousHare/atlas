@@ -54,6 +54,10 @@ create table public.exercises (
   constraint exercises_user_name_key unique (user_id, name)
 );
 
+-- indeksy
+-- zabezpieczenie przed dodawaniem tych samych ćwiczeń, różniących się spacją lub wielkością liter
+create unique index exercises_user_name_ci_key on public.exercises (user_id, lower(trim(name)));
+
 -- uprawnienia
 grant select, insert, update, delete
   on public.exercises
