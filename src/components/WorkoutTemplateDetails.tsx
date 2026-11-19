@@ -1,8 +1,10 @@
 import { useState, type SyntheticEvent } from "react";
 import { Link, useParams } from "react-router-dom";
 import useExercises from "../hooks/useExercises";
+import { ladderRungs } from "../lib/ladder";
 import useTemplateExercises, {
   type Block,
+  type Scheme,
   type TemplateExercise,
 } from "../hooks/useTemplateExercises";
 
@@ -17,10 +19,17 @@ function toNumber(value: string) {
   return value === "" ? null : Number(value);
 }
 
-// np. "3 × 8–10 · 20 kg" albo "2 × 60 s"
+// np. "3 × 8–10 · 20 kg", "2 × 60 s" albo "3 × drabina 1-2-3 · 20 kg"
 function describe(item: TemplateExercise) {
   const parts: string[] = [];
-  if (item.target_seconds !== null) {
+  if (
+    item.scheme === "ladder" &&
+    item.ladder_step !== null &&
+    item.ladder_top !== null
+  ) {
+    const rungs = ladderRungs(item.ladder_step, item.ladder_top);
+    parts.push(`${item.sets} × drabina ${rungs.join("-")}`);
+  } else if (item.target_seconds !== null) {
     parts.push(`${item.sets} × ${item.target_seconds} s`);
   } else if (item.target_min !== null) {
     const reps =
@@ -50,6 +59,9 @@ export default function WorkoutTemplateDetails() {
   const [exerciseId, setExerciseId] = useState("");
   const [block, setBlock] = useState<Block>("main");
   const [sets, setSets] = useState("3");
+  const [scheme, setScheme] = useState<Scheme>("straight");
+  const [ladderStep, setLadderStep] = useState("1");
+  const [ladderTop, setLadderTop] = useState("");
   const [targetMin, setTargetMin] = useState("");
   const [targetMax, setTargetMax] = useState("");
   const [targetSeconds, setTargetSeconds] = useState("");
@@ -66,22 +78,39 @@ export default function WorkoutTemplateDetails() {
     if (!selected) return;
 
     const isTime = selected.measure === "time";
+    // drabina ma sens tylko przy ćwiczeniach na powtórzenia
+    const isLadder = !isTime && scheme === "ladder";
+    const step = Number(ladderStep);
+    const top = Number(ladderTop);
+
+    if (isLadder && top % step !== 0) {
+      setErrorMessage(
+        "Szczyt drabiny musi być wielokrotnością kroku (np. 2-4-6)",
+      );
+      return;
+    }
+
     const min = toNumber(targetMin);
     const error = await addItem({
       exercise_id: selected.id,
       block,
       sets: Number(sets),
-      target_min: isTime ? null : min,
+      scheme: isLadder ? "ladder" : "straight",
+      target_min: isTime || isLadder ? null : min,
       // puste "max" = stała liczba powtórzeń, czyli max = min
-      target_max: isTime ? null : (toNumber(targetMax) ?? min),
+      target_max: isTime || isLadder ? null : (toNumber(targetMax) ?? min),
       target_seconds: isTime ? toNumber(targetSeconds) : null,
+      ladder_step: isLadder ? step : null,
+      ladder_top: isLadder ? top : null,
       weight_kg: selected.uses_weight ? toNumber(weightKg) : null,
       box_cm: toNumber(boxCm),
       notes: notes.trim() || null,
     });
 
     if (error?.code === "23514") {
-      setErrorMessage("Sprawdź wartości: „od” nie może być większe niż „do”");
+      setErrorMessage(
+        "Sprawdź wartości: „od” nie może być większe niż „do”, a krok drabiny większy niż szczyt",
+      );
       return;
     } else if (error) {
       setErrorMessage("Wystąpił błąd, spróbuj ponownie");
@@ -89,6 +118,9 @@ export default function WorkoutTemplateDetails() {
     }
 
     setExerciseId("");
+    setScheme("straight");
+    setLadderStep("1");
+    setLadderTop("");
     setTargetMin("");
     setTargetMax("");
     setTargetSeconds("");
@@ -215,6 +247,59 @@ export default function WorkoutTemplateDetails() {
         </div>
 
         {selected?.measure === "reps" && (
+          <div className="space-y-1">
+            <label htmlFor="te-scheme" className={labelClass}>
+              Schemat
+            </label>
+            <select
+              id="te-scheme"
+              value={scheme}
+              onChange={(e) => setScheme(e.target.value as Scheme)}
+              className={inputClass}
+            >
+              <option value="straight">zwykłe serie</option>
+              <option value="ladder">drabina</option>
+            </select>
+          </div>
+        )}
+
+        {selected?.measure === "reps" && scheme === "ladder" && (
+          <fieldset className="space-y-1">
+            <legend className={labelClass}>
+              Drabina: krok i szczyt (np. 1 i 3 → 1-2-3, 2 i 6 → 2-4-6)
+            </legend>
+            <div className="flex gap-2">
+              <label className="sr-only" htmlFor="te-ladder-step">
+                Krok
+              </label>
+              <input
+                id="te-ladder-step"
+                type="number"
+                min="1"
+                placeholder="krok"
+                value={ladderStep}
+                onChange={(e) => setLadderStep(e.target.value)}
+                required
+                className={inputClass}
+              />
+              <label className="sr-only" htmlFor="te-ladder-top">
+                Szczyt
+              </label>
+              <input
+                id="te-ladder-top"
+                type="number"
+                min="1"
+                placeholder="szczyt"
+                value={ladderTop}
+                onChange={(e) => setLadderTop(e.target.value)}
+                required
+                className={inputClass}
+              />
+            </div>
+          </fieldset>
+        )}
+
+        {selected?.measure === "reps" && scheme === "straight" && (
           <fieldset className="space-y-1">
             <legend className={labelClass}>
               Powtórzenia w serii (np. 8–10, przy stałej liczbie tylko „od”)

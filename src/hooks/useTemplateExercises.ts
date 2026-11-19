@@ -3,15 +3,19 @@ import { supabase } from "../lib/supabase";
 import { type Exercise } from "./useExercises";
 
 export type Block = "warmup" | "main" | "cooldown";
+export type Scheme = "straight" | "ladder";
 
 export type TemplateExercise = {
   id: string;
   position: number;
   block: Block;
   sets: number;
+  scheme: Scheme;
   target_min: number | null;
   target_max: number | null;
   target_seconds: number | null;
+  ladder_step: number | null;
+  ladder_top: number | null;
   weight_kg: number | null;
   box_cm: number | null;
   notes: string | null;
@@ -24,7 +28,7 @@ export type NewTemplateExercise = Omit<
 > & { exercise_id: string };
 
 const COLUMNS =
-  "id, position, block, sets, target_min, target_max, target_seconds, weight_kg, box_cm, notes, exercise:exercises(id, name, measure, uses_weight, unilateral)";
+  "id, position, block, sets, scheme, target_min, target_max, target_seconds, ladder_step, ladder_top, weight_kg, box_cm, notes, exercise:exercises(id, name, measure, uses_weight, unilateral)";
 
 export default function useTemplateExercises(templateId: string) {
   const [templateName, setTemplateName] = useState("");
