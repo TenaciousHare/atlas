@@ -174,3 +174,108 @@ create policy "template_exercises: tylko własne"
       where e.id = exercise_id and e.user_id = auth.uid()
     )
   );
+
+  -- -----------------------------------------
+-- workout_sessions — wykonane treningi
+-- -----------------------------------------
+-- tabela
+create table public.workout_sessions (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null default auth.uid()
+    references auth.users (id) on delete cascade,
+  template_id uuid null
+    references public.workout_templates (id) on delete set null,
+  date date not null default current_date,
+  notes text null,
+  finished_at timestamptz null,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+-- indeksy
+-- szybka lista treningów, od najnowszego
+create index workout_sessions_user_date_idx
+  on public.workout_sessions (user_id, date desc);
+
+-- uprawnienia
+grant select, insert, update, delete
+  on public.workout_sessions
+  to authenticated;
+
+-- RLS
+alter table public.workout_sessions enable row level security;
+
+create policy "workout_sessions: tylko własne"
+  on public.workout_sessions
+  for all
+  to authenticated
+  using (auth.uid() = user_id)
+  with check (
+    auth.uid() = user_id
+    and (
+      template_id is null
+      or exists (
+        select 1 from public.workout_templates t
+        where t.id = template_id and t.user_id = auth.uid()
+      )
+    )
+  );
+
+-- -----------------------------------------
+-- session_sets — wykonane wysiłki (seria / szczebel / strona)
+-- -----------------------------------------
+-- tabela
+create table public.session_sets (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null default auth.uid()
+    references auth.users (id) on delete cascade,
+  session_id uuid not null
+    references public.workout_sessions (id) on delete cascade,
+  exercise_id uuid not null
+    references public.exercises (id) on delete restrict,
+  position integer not null check (position > 0),
+  set_no integer not null check (set_no > 0),
+  rung_no integer null check (rung_no > 0),
+  side text null check (side in ('L', 'R')),
+  reps integer null check (reps >= 0),
+  seconds integer null check (seconds >= 0),
+  weight_kg numeric(5, 2) null check (weight_kg >= 0),
+  box_cm numeric(4, 1) null check (box_cm > 0),
+  done boolean not null default false,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  constraint session_sets_slot_key
+    unique nulls not distinct (session_id, position, set_no, rung_no, side)
+);
+
+-- indeksy
+-- szybkie pobieranie serii treningu, od razu w kolejności
+-- (unikalny klucz session_sets_slot_key już tworzy taki indeks)
+-- szybkie liczenie rekordów jednego ćwiczenia
+create index session_sets_exercise_idx
+  on public.session_sets (exercise_id);
+
+-- uprawnienia
+grant select, insert, update, delete
+  on public.session_sets
+  to authenticated;
+
+-- RLS
+alter table public.session_sets enable row level security;
+
+create policy "session_sets: tylko własne"
+  on public.session_sets
+  for all
+  to authenticated
+  using (auth.uid() = user_id)
+  with check (
+    auth.uid() = user_id
+    and exists (
+      select 1 from public.workout_sessions s
+      where s.id = session_id and s.user_id = auth.uid()
+    )
+    and exists (
+      select 1 from public.exercises e
+      where e.id = exercise_id and e.user_id = auth.uid()
+    )
+  );
