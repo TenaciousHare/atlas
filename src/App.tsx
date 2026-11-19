@@ -8,6 +8,7 @@ import DailyForm from "./components/DailyForm";
 import Dashboard from "./components/Dashboard";
 import Exercises from "./components/Exercises";
 import WorkoutTemplates from "./components/WorkoutTemplates";
+import WorkoutTemplateDetails from "./components/WorkoutTemplateDetails";
 
 function App() {
   const [session, setSession] = useState<Session | null>(null);
@@ -50,6 +51,7 @@ function App() {
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="cwiczenia" element={<Exercises />} />
           <Route path="plany" element={<WorkoutTemplates />} />
+          <Route path="plany/:id" element={<WorkoutTemplateDetails />} />
         </Route>
       </Routes>
     </BrowserRouter>
