@@ -1,4 +1,5 @@
 import { useState, type SyntheticEvent } from "react";
+import { Link } from "react-router-dom";
 import useWorkoutTemplates from "../hooks/useWorkoutTemplates";
 
 export default function WorkoutTemplates() {
@@ -85,8 +86,13 @@ export default function WorkoutTemplates() {
       {templates.length > 0 && (
         <ul className="divide-y divide-brand-border">
           {templates.map((template) => (
-            <li key={template.id} className="py-2 text-zinc-100">
-              {template.name}
+            <li key={template.id}>
+              <Link
+                to={`/plany/${template.id}`}
+                className="block py-2 text-zinc-100 hover:text-brand-gold"
+              >
+                {template.name}
+              </Link>
             </li>
           ))}
         </ul>
