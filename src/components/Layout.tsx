@@ -28,6 +28,9 @@ export default function Layout({
             <NavLink to="/cwiczenia" className={linkClass}>
               Ćwiczenia
             </NavLink>
+            <NavLink to="/plany" className={linkClass}>
+              Plany
+            </NavLink>
             <NavLink to="/dashboard" className={linkClass}>
               Dashboard
             </NavLink>
