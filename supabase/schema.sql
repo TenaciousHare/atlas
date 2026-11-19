@@ -73,3 +73,104 @@ create policy "exercises: tylko własne"
   using (auth.uid() = user_id)
   with check (auth.uid() = user_id);
 
+-- -----------------------------------------
+-- workout_templates — plany treningowe (A1, A2, B)
+-- -----------------------------------------
+-- tabela
+create table public.workout_templates (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null default auth.uid()
+    references auth.users (id) on delete cascade,
+  name text not null,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+-- indeksy
+-- nazwa planu unikalna bez względu na wielkość liter i spacje
+create unique index workout_templates_user_name_ci_key
+  on public.workout_templates (user_id, lower(trim(name)));
+
+-- uprawnienia
+grant select, insert, update, delete
+  on public.workout_templates
+  to authenticated;
+
+-- RLS
+alter table public.workout_templates enable row level security;
+
+create policy "workout_templates: tylko własne"
+  on public.workout_templates
+  for all
+  to authenticated
+  using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
+
+-- -----------------------------------------
+-- template_exercises — ćwiczenia w planie (tabela łącząca)
+-- -----------------------------------------
+-- tabela
+create table public.template_exercises (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null default auth.uid()
+    references auth.users (id) on delete cascade,
+  template_id uuid not null
+    references public.workout_templates (id) on delete cascade,
+  exercise_id uuid not null
+    references public.exercises (id) on delete restrict,
+  position integer not null check (position > 0),
+  block text not null default 'main'
+    check (block in ('warmup', 'main', 'cooldown')),
+  sets integer not null default 1 check (sets > 0),
+  scheme text not null default 'straight'
+    check (scheme in ('straight', 'ladder')),
+  target_min integer null check (target_min > 0),
+  target_max integer null check (target_max > 0),
+  target_seconds integer null check (target_seconds > 0),
+  ladder_step integer null check (ladder_step > 0),
+  ladder_top integer null check (ladder_top > 0),
+  weight_kg numeric(5, 2) null check (weight_kg >= 0),
+  box_cm numeric(4, 1) null check (box_cm > 0),
+  notes text null,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  constraint template_exercises_target_range_check
+    check (target_min <= target_max),
+  constraint template_exercises_ladder_check
+    check (scheme <> 'ladder' or (ladder_step is not null and ladder_top is not null)),
+  constraint template_exercises_ladder_range_check
+    check (ladder_step <= ladder_top)
+);
+
+-- indeksy
+-- szybkie pobieranie ćwiczeń planu, od razu w kolejności
+create index template_exercises_template_position_idx
+  on public.template_exercises (template_id, position);
+-- szybkie sprawdzanie, czy ćwiczenie jest używane w jakimś planie
+create index template_exercises_exercise_idx
+  on public.template_exercises (exercise_id);
+
+-- uprawnienia
+grant select, insert, update, delete
+  on public.template_exercises
+  to authenticated;
+
+-- RLS
+alter table public.template_exercises enable row level security;
+
+create policy "template_exercises: tylko własne"
+  on public.template_exercises
+  for all
+  to authenticated
+  using (auth.uid() = user_id)
+  with check (
+    auth.uid() = user_id
+    and exists (
+      select 1 from public.workout_templates t
+      where t.id = template_id and t.user_id = auth.uid()
+    )
+    and exists (
+      select 1 from public.exercises e
+      where e.id = exercise_id and e.user_id = auth.uid()
+    )
+  );
