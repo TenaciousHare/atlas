@@ -1,7 +1,8 @@
 import { useState, type SyntheticEvent } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import useExercises from "../hooks/useExercises";
 import { ladderRungs } from "../lib/ladder";
+import { startSession } from "../hooks/useWorkoutSession";
 import useTemplateExercises, {
   type Block,
   type Scheme,
@@ -64,6 +65,8 @@ export default function WorkoutTemplateDetails() {
     fetchError,
   } = useTemplateExercises(id);
   const { exercises } = useExercises();
+  const navigate = useNavigate();
+  const [isStarting, setIsStarting] = useState(false);
 
   const [exerciseId, setExerciseId] = useState("");
   const [block, setBlock] = useState<Block>("main");
@@ -81,6 +84,18 @@ export default function WorkoutTemplateDetails() {
   const [listError, setListError] = useState<null | string>(null);
 
   const selected = exercises.find((ex) => ex.id === exerciseId);
+
+  async function handleStart() {
+    setListError(null);
+    setIsStarting(true);
+    const result = await startSession(id, items);
+    setIsStarting(false);
+    if (result.error) {
+      setListError("Nie udało się rozpocząć treningu. Spróbuj ponownie.");
+      return;
+    }
+    navigate(`/trening/${result.id}`);
+  }
 
   async function handleMove(itemId: string, direction: "up" | "down") {
     setListError(null);
@@ -182,6 +197,16 @@ export default function WorkoutTemplateDetails() {
       <h2 className="mt-2 mb-6 text-2xl font-semibold text-zinc-100">
         Plan {templateName}
       </h2>
+      {items.length > 0 && (
+        <button
+          type="button"
+          onClick={handleStart}
+          disabled={isStarting}
+          className="mb-6 w-full rounded bg-brand-gold text-brand-bg py-2 font-medium disabled:opacity-50"
+        >
+          {isStarting ? "Tworzę trening…" : "Rozpocznij trening"}
+        </button>
+      )}
 
       {BLOCKS.map(({ value, label }) => {
         const blockItems = items.filter((item) => item.block === value);
