@@ -49,11 +49,20 @@ function describe(item: TemplateExercise) {
 const inputClass =
   "w-full rounded border px-3 py-2 bg-brand-surface border-brand-border text-zinc-100 placeholder:text-zinc-500";
 const labelClass = "block text-sm text-zinc-400";
+const iconButtonClass =
+  "rounded px-2 py-1 text-sm text-zinc-400 hover:text-zinc-100 disabled:opacity-30 disabled:hover:text-zinc-400";
 
 export default function WorkoutTemplateDetails() {
   const { id = "" } = useParams();
-  const { templateName, items, addItem, isLoading, fetchError } =
-    useTemplateExercises(id);
+  const {
+    templateName,
+    items,
+    addItem,
+    moveItem,
+    removeItem,
+    isLoading,
+    fetchError,
+  } = useTemplateExercises(id);
   const { exercises } = useExercises();
 
   const [exerciseId, setExerciseId] = useState("");
@@ -69,8 +78,23 @@ export default function WorkoutTemplateDetails() {
   const [boxCm, setBoxCm] = useState("");
   const [notes, setNotes] = useState("");
   const [errorMessage, setErrorMessage] = useState<null | string>(null);
+  const [listError, setListError] = useState<null | string>(null);
 
   const selected = exercises.find((ex) => ex.id === exerciseId);
+
+  async function handleMove(itemId: string, direction: "up" | "down") {
+    setListError(null);
+    const error = await moveItem(itemId, direction);
+    if (error)
+      setListError("Nie udało się zmienić kolejności. Odśwież stronę.");
+  }
+
+  async function handleRemove(itemId: string) {
+    setListError(null);
+    const error = await removeItem(itemId);
+    if (error)
+      setListError("Nie udało się usunąć ćwiczenia. Spróbuj ponownie.");
+  }
 
   async function handleAdd(e: SyntheticEvent) {
     e.preventDefault();
@@ -166,23 +190,56 @@ export default function WorkoutTemplateDetails() {
           <div key={value} className="mb-6">
             <h3 className="mb-2 text-sm font-medium text-zinc-400">{label}</h3>
             <ol className="divide-y divide-brand-border">
-              {blockItems.map((item) => (
-                <li key={item.id} className="py-2">
-                  <div className="flex justify-between gap-2 text-zinc-100">
-                    {item.exercise.name}
-                    <span className="text-sm text-zinc-500">
-                      {describe(item)}
-                    </span>
+              {blockItems.map((item, index) => (
+                <li key={item.id} className="flex items-start gap-2 py-2">
+                  <div className="flex-1">
+                    <div className="flex justify-between gap-2 text-zinc-100">
+                      {item.exercise.name}
+                      <span className="text-sm text-zinc-500">
+                        {describe(item)}
+                      </span>
+                    </div>
+                    {item.notes && (
+                      <p className="text-sm text-zinc-500">{item.notes}</p>
+                    )}
                   </div>
-                  {item.notes && (
-                    <p className="text-sm text-zinc-500">{item.notes}</p>
-                  )}
+                  <div className="flex gap-1">
+                    <button
+                      type="button"
+                      onClick={() => handleMove(item.id, "up")}
+                      disabled={index === 0}
+                      aria-label={`Przesuń ${item.exercise.name} w górę`}
+                      className={iconButtonClass}
+                    >
+                      ↑
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleMove(item.id, "down")}
+                      disabled={index === blockItems.length - 1}
+                      aria-label={`Przesuń ${item.exercise.name} w dół`}
+                      className={iconButtonClass}
+                    >
+                      ↓
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleRemove(item.id)}
+                      aria-label={`Usuń ${item.exercise.name} z planu`}
+                      className={`${iconButtonClass} hover:text-red-400`}
+                    >
+                      ✕
+                    </button>
+                  </div>
                 </li>
               ))}
             </ol>
           </div>
         );
       })}
+      <div className="text-sm text-red-400" role="alert">
+        {listError}
+      </div>
       {items.length === 0 && (
         <p className="mb-6 text-sm text-zinc-500">
           Plan jest pusty — dodaj pierwsze ćwiczenie poniżej.
