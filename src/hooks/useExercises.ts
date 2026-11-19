@@ -43,5 +43,21 @@ export default function useExercises() {
     return null;
   }
 
-  return { exercises, addExercise, isLoading, fetchError };
+  async function updateExercise(id: string, changes: Omit<Exercise, "id">) {
+    const { data, error } = await supabase
+      .from("exercises")
+      .update({ ...changes, updated_at: new Date().toISOString() })
+      .eq("id", id)
+      .select("id, name, measure, uses_weight, unilateral")
+      .single();
+    if (error) return error;
+    setExercises((prev) =>
+      prev
+        .map((exercise) => (exercise.id === id ? data : exercise))
+        .sort((a, b) => a.name.localeCompare(b.name, "pl")),
+    );
+    return null;
+  }
+
+  return { exercises, addExercise, updateExercise, isLoading, fetchError };
 }

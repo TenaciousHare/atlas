@@ -1,5 +1,6 @@
 import { useState, type SyntheticEvent } from "react";
 import useExercises, { type Exercise } from "../hooks/useExercises";
+import ExerciseEditForm from "./ExerciseEditForm";
 
 export default function Exercises() {
   const [name, setName] = useState("");
@@ -8,7 +9,15 @@ export default function Exercises() {
   const [unilateral, setUnilateral] = useState(false);
   const [errorMessage, setErrorMessage] = useState<null | string>(null);
   const [nameError, setNameError] = useState(false);
-  const { exercises, addExercise, isLoading, fetchError } = useExercises();
+  const [editingId, setEditingId] = useState<null | string>(null);
+  const { exercises, addExercise, updateExercise, isLoading, fetchError } =
+    useExercises();
+
+  async function handleSave(id: string, changes: Omit<Exercise, "id">) {
+    const error = await updateExercise(id, changes);
+    if (!error) setEditingId(null);
+    return error;
+  }
 
   async function handleAdd(e: SyntheticEvent) {
     e.preventDefault();
@@ -139,17 +148,40 @@ export default function Exercises() {
       </div>
       {exercises.length > 0 && (
         <ul className="divide-y divide-brand-border">
-          {exercises.map((exercise) => (
-            <li
-              key={exercise.id}
-              className="flex justify-between py-2 text-zinc-100"
-            >
-              {exercise.name}
-              <span className="text-sm text-zinc-500">
-                {exercise.measure === "reps" ? "powtórzenia" : "czas"}
-              </span>
-            </li>
-          ))}
+          {exercises.map((exercise) =>
+            exercise.id === editingId ? (
+              <li key={exercise.id}>
+                <ExerciseEditForm
+                  exercise={exercise}
+                  onSave={(changes) => handleSave(exercise.id, changes)}
+                  onCancel={() => setEditingId(null)}
+                />
+              </li>
+            ) : (
+              <li
+                key={exercise.id}
+                className="flex items-center justify-between gap-2 py-2 text-zinc-100"
+              >
+                <span className="flex-1">
+                  {exercise.name}
+                  {exercise.unilateral && (
+                    <span className="text-sm text-zinc-500"> · na stronę</span>
+                  )}
+                </span>
+                <span className="text-sm text-zinc-500">
+                  {exercise.measure === "reps" ? "powtórzenia" : "czas"}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setEditingId(exercise.id)}
+                  aria-label={`Edytuj ${exercise.name}`}
+                  className="rounded px-2 py-1 text-sm text-zinc-400 hover:text-brand-gold"
+                >
+                  Edytuj
+                </button>
+              </li>
+            ),
+          )}
         </ul>
       )}
     </section>
